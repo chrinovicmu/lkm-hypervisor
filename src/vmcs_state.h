@@ -104,118 +104,19 @@ struct desc64 {
 	uint32_t zero1;
 } __attribute__((packed));
 
-static void guest_code(void)
-{
-   __asm__ __volatile__ (
-        "vmcall"
-    );
-}
-static inline uint16_t get_es1(void)
-{
-	uint16_t es;
 
-	__asm__ __volatile__ (
-        "mov %%es, %[es]"
-		:[es]"=rm"(es)
-    );
+void guest_code(void);
 
-	return es;
-}
+uint16_t get_es1(void);
+uint16_t get_cs1(void);
+uint16_t get_ss1(void);
+uint16_t get_ds1(void);
+uint16_t get_fs1(void);
+uint16_t get_gs1(void);
+uint16_t get_tr1(void);
 
-static inline uint16_t get_cs1(void)
-{
-	uint16_t cs;
-
-	__asm__ __volatile__ (
-        "mov %%cs, %[cs]"
-		:[cs]"=rm"(cs)
-    );
-
-	return cs;
-}
-
-static inline uint16_t get_ss1(void)
-{
-	uint16_t ss;
-
-	__asm__ __volatile__ (
-        "mov %%ss, %[ss]"
-		:[ss]"=rm"(ss)
-    );
-
-	return ss;
-}
-
-static inline uint16_t get_ds1(void)
-{
-	uint16_t ds;
-
-	__asm__ __volatile__ (
-        "mov %%ds, %[ds]"
-		:[ds]"=rm"(ds));
-
-	return ds;
-}
-
-static inline uint16_t get_fs1(void)
-{
-	uint16_t fs;
-
-	__asm__ __volatile__ (
-        "mov %%fs, %[fs]"
-		:[fs]"=rm"(fs)
-    );
-
-	return fs;
-}
-
-static inline uint16_t get_gs1(void)
-{
-	uint16_t gs;
-
-	__asm__ __volatile__ (
-        "mov %%gs, %[gs]"
-		:[gs]"=rm"(gs)
-    );
-
-	return gs;
-}
-
-static inline uint16_t get_tr1(void)
-{
-	uint16_t tr;
-
-	__asm__ __volatile__ (
-        "str %[tr]"
-		:[tr]"=rm"(tr)
-    );
-
-	return tr;
-}
-
-static inline uint64_t get_gdt_base1(void)
-{
-	struct desc_ptr gdt;
-
-	__asm__ __volatile__(
-        "sgdt %[gdt]"
-		: [gdt]"=m"(gdt)
-    );
-
-	return gdt.address;
-}
-
-static inline uint64_t get_idt_base1(void)
-{
-	struct desc_ptr idt;
-
-	__asm__ __volatile__(
-        "sidt %[idt]"
-		: [idt]"=m"(idt)
-    );
-
-	return idt.address;
-}
+uint64_t get_gdt_base1(void);
+uint64_t get_idt_base1(void);
 
 static inline uint64_t get_desc64_base(const struct desc64 *desc)
 {

@@ -126,172 +126,18 @@ static inline unsigned long long notrace __rdmsr1(unsigned int msr)
     return ((unsigned long long)high << 32) | low; 
 }
 
+uint64_t _read_cr0(void);
+uint64_t _read_cr2(void);
+uint64_t _read_cr3(void);
+uint64_t _read_cr4(void);
 
-static inline uint64_t _read_cr0(void)
-{
-    uint64_t val;
+uint32_t _vmcs_revision_id(void);
 
-    __asm__ __volatile__ (
-        "mov %%cr0, %0" 
-        : "=r"(val)
-    );
-
-    return val;
-}
-
-static inline uint64_t _read_cr2(void)
-{
-    uint64_t val;
-
-    __asm__ __volatile__ (
-        "mov %%cr2, %0" 
-        : "=r"(val)
-    );
-
-    return val;
-}
-
-static inline uint64_t _read_cr3(void) 
-{
-    uint64_t val;
-
-    __asm__ __volatile__ (
-        "mov %%cr3, %0" 
-        :"=r"(val)
-    );
-
-    return val;
-}
-
-static inline uint64_t _read_cr4(void) 
-{
-    uint64_t val;
-
-    __asm__ __volatile__ ("mov %%cr4, %0" 
-        : "=r"(val)
-    );
-
-    return val;
-}
-
-
-/*get revision id*/ 
-
-static inline uint32_t _vmcs_revision_id(void)
-{
-    return __rdmsr1(MSR_IA32_VMX_BASIC); 
-}
-
-static inline uint8_t _vmxon(uint64_t vmxon_phys_addr)
-{
-    uint8_t ret; 
-    
-    __asm__ __volatile__ (
-        "vmxon %[pa]; setna %[ret]"
-        :[ret] "=rm"(ret)
-        :[pa]  "m"  (vmxon_phys_addr)
-        :"cc", "memory"
-    );
-
-    return ret; 
-}
-
-static inline int _vmptrld(uint64_t vmcs_phys_addr)
-{
-    uint8_t ret; 
-
-    __asm__ __volatile__ (
-        "vmptrld %[pa]; setna %[ret]"
-        :[ret] "=rm"(ret)
-        :[pa]  "m"  (vmcs_phys_addr)
-        : "cc", "memory"
-    ); 
-    return ret; 
-}
-
-static inline int _vmread(uint64_t field_enc, uint64_t *value)
-{
-    uint8_t ret; 
-    uint64_t val; 
-
-    __asm__ __volatile__ (
-        "vmread %[field_enc], %[val]; setna %[ret]"
-        :[ret] "=rm"(ret), [val] "=r"(val)
-        :[field_enc] "r" (field_enc)
-        :"cc"
-    ); 
-     
-    *value = val;
-
-    return ret ? 1 : 0;
-}
-
-static inline int _vmwrite(uint64_t field_enc, uint64_t value)
-{
-    uint8_t status; 
-
-    __asm__ __volatile__ (
-        "vmwrite %[value], %[field_enc]; setna %[status]"
-        :[status] "=rm" (status)
-        :[value] "rm"(value), [field_enc] "r" (field_enc)
-        :"cc"
-    ); 
-
-    if(!status)
-    {
-        return 0; 
-    }
-
-    /*pushes error code to error field of vmcs on write fails */ 
-
-    else
-    {
-        uint64_t error_code; 
-
-        if(_vmread(VMCS_INSTRUCTION_ERROR_FIELD, &error_code) == 0)
-        {
-            return (int)error_code; 
-        } 
-        else
-        {
-            return - 1; 
-
-        }
-
-    }
-}
-
-static inline int _vmlaunch(void)
-{
-    int ret;
-
-    __asm__ __volatile__ (
-        "push %%rbp;"
-        "push %%rcx;"
-        "push %%rdx;"
-        "push %%rsi;"
-        "push %%rdi;"
-        "push $0;"
-        "vmwrite %%rsp, %[host_rsp];"
-        "lea 1f(%%rip), %%rax;"
-        "vmwrite %%rax, %[host_rip];"
-        "vmlaunch;"
-        "incq (%%rsp);"
-        "1: pop %%rax;"
-        "pop %%rdi;"
-        "pop %%rsi;"
-        "pop %%rdx;"
-        "pop %%rcx;"
-        "pop %%rbp;"
-        : [ret] "=&a"(ret)
-        : [host_rsp] "r"((uint64_t)HOST_RSP),
-        [host_rip] "r"((uint64_t)HOST_RIP)
-        : "memory", "cc", "rbx", "r8", "r9", "r10", 
-        "r11", "r12", "r14", "r15"
-    );
-
-    return ret; 
-}
+uint8_t _vmxon(uint64_t phys_addr);
+int _vmptrld(uint64_t vmcs_phys_addr);
+int _vmread(uint64_t field_enc, uint64_t *value);
+int _vmwrite(uint64_t field_enc, uint64_t value);
+int _vmlaunch(void);
 
 struct _msr_entry 
 {

@@ -1,4 +1,3 @@
-
 ifeq ($(KERNELRELEASE),)
     # Called from command line
     KERNELDIR ?= /lib/modules/$(shell uname -r)/build
@@ -19,9 +18,13 @@ clean:
 else
     # Called from kernel build system
 
-    # Tell kernel to build module lkm_hyp.o from src/lkm_hyp.c
+    # Kernel module name
     obj-m := lkm_hyp.o
-    lkm_hyp-objs := src/lkm_hyp.o
 
+    # C and assembly source files to compile
+    lkm_hyp-objs := src/lkm_hyp.o src/vmx.o src/state_func.o
+
+    # Flags for compilation
     ccflags-y += -mcmodel=kernel -mno-red-zone -g -DDEBUG
 endif
+
